@@ -14,16 +14,20 @@ import java.util.Properties;
 class Recruiter {
     String name;
     String email;
+    String companyName;
+    String title;
 
-    Recruiter(String name, String email) {
+    Recruiter(String name, String email, String companyName, String title) {
         this.name = name;
         this.email = email;
+        this.companyName = companyName;
+        this.title = title;
     }
 }
 
 public class EmailSender {
-    private static final int START_INDEX = 31;   // Change to desired start row
-    private static final int END_INDEX = 32;   // Change to desired end row
+    private static final int START_INDEX = 101;   // Change to desired start row
+    private static final int END_INDEX = 300;   // Change to desired end row
 
     public static void main(String[] args) {
         String excelFilePath = "C:\\Users\\kundu\\Dropbox\\PC\\Desktop\\cold-mail.xlsx";
@@ -32,7 +36,7 @@ public class EmailSender {
         for (Recruiter recruiter : recruiters) {
             sendEmail(recruiter);
             try {
-                Thread.sleep(5000); // 5-second delay to avoid spam detection
+                Thread.sleep(8000); // 8-second delay to avoid spam detection
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -50,14 +54,18 @@ public class EmailSender {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
-                Cell nameCell = row.getCell(2);  // Column B (Name)
-                Cell emailCell = row.getCell(3); // Column C (Email)
+                Cell nameCell = row.getCell(2);  // Column C (Name)
+                Cell emailCell = row.getCell(3); // Column D (Email)
+                Cell titleCell = row.getCell(4); // Column E (Title)
+                Cell companyCell = row.getCell(5); // Column F (Company)
 
                 String name = getCellValueAsString(nameCell);
-                String email = getCellValueAsString(emailCell).trim(); // Fix for email retrieval
+                String email = getCellValueAsString(emailCell).trim();
+                String title = getCellValueAsString(titleCell);
+                String companyName = getCellValueAsString(companyCell).trim();
 
                 if (name != null && !email.isEmpty()) {
-                    recruiters.add(new Recruiter(name, email));
+                    recruiters.add(new Recruiter(name, email, companyName, title));
                 }
             }
         } catch (Exception e) {
@@ -68,24 +76,23 @@ public class EmailSender {
 
     private static String getCellValueAsString(Cell cell) {
         if (cell == null) {
-            return null;
+            return "";
         }
         return switch (cell.getCellType()) {
             case STRING -> cell.getStringCellValue();
             case NUMERIC -> String.valueOf((long) cell.getNumericCellValue()); // Convert to long to remove decimals
             case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            default -> null;
+            default -> "";
         };
     }
 
     public static void sendEmail(Recruiter recruiter) {
-
         Dotenv dotenv = Dotenv.configure()
                 .directory("src/main/resources")
                 .load();
 
-        final String username = dotenv.get("EMAIL_USER");// Your email
-        final String password = dotenv.get("EMAIL_PASSWORD"); // Use environment variable for security
+        final String username = dotenv.get("EMAIL_USER");
+        final String password = dotenv.get("EMAIL_PASSWORD");
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -103,30 +110,18 @@ public class EmailSender {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(username));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recruiter.email));
-            message.setSubject("Full Stack Java Web Developer");
+            message.setSubject("Full Stack Java Web Developer - " + recruiter.companyName);
 
             String emailContent = "Dear " + recruiter.name + ",\n\n" +
-                    "I hope this message finds you well. My name is Vineet Kundu, and I am a final-year student at the World College of Technology and Management, FarukhNagar, Gurgaon.\n" +
-                    "\n" +
-                    "I am writing to express my keen interest in a job opportunity in the field of Software Development. With a strong passion for software development, particularly in React and Java, I am eager to contribute to innovative projects and gain practical experience in a professional setting.\n" +
-                    "\n" +
-                    "I have 9 months of experience as a React and Java Developer at Qubitnets Technologies, where I honed my skills in building scalable applications and working collaboratively within a team. Additionally, I am proficient in databases, Java, Spring, and Spring Boot, and I am available to join immediately.\n" +
-                    "\n" +
-                    "You can find more about my work and contributions through the following profiles:\n" +
-                    "\n" +
-                    "GitHub: https://github.com/KunduVineet\n" +
-                    "\n" +
-                    "LinkedIn: https://www.linkedin.com/in/vineet-kundu-b83407218/\n" +
-                    "\n" +
-                    "Portfolio: https://vk-portfolio-cd9d.vercel.app/ \n" +
-                    "\n" +
-                    "Resume : https://drive.google.com/file/d/1vCOIKf_a0sQZm1YApkNMAcTbp7xvYOm3/view?usp=drivesdk \n" +
-                    "\n" +
-                    "\n" +
-                    "I would greatly appreciate the opportunity to discuss potential job openings or the application process further. Please find my resume attached for your reference.\n" +
-                    "\n" +
-                    "Thank you for considering my application. I look forward to the possibility of contributing to your team and its projects.\n" +
-                    "\n" +
+                    "I hope this message finds you well. MySelf Vineet Kundu from MDU, and I am reaching out to express my keen interest in a job opportunity at " + recruiter.companyName + ".\n\n" +
+                    "I noticed that you are a " + recruiter.title + " at " + recruiter.companyName + ", and I would love the opportunity to discuss how my Skills and Experience align with your team’s needs.\n\n" +
+                    "With 9 months of Experience as a React and Java Developer at Qubitnets Technologies, I have honed my skills in developing Scalable Applications. Additionally, I am proficient in Java, Spring Boot, and databases, and I am available for immediate joining.\n\n" +
+                    "Here are some links to my work:\n" +
+                    "GitHub: https://github.com/KunduVineet\n\n" +
+                    "LinkedIn: https://www.linkedin.com/in/vineet-kundu-b83407218/\n\n" +
+                    "Portfolio: https://vk-portfolio-cd9d.vercel.app/\n\n" +
+                    "Resume: https://drive.google.com/file/d/10ryvX2HN05xkU3Is9Odz2hGpY2yvGsO-/view?usp=drivesdk\n\n" +
+                    "I would love to connect and discuss potential opportunities at " + recruiter.companyName + ". Please let me know a convenient time to chat.\n\n" +
                     "Best regards,\n" +
                     "Vineet Kundu\n" +
                     "kunduvineet6@gmail.com\n" +
@@ -137,7 +132,7 @@ public class EmailSender {
 
             System.out.println("✅ Email sent to: " + recruiter.name + " <" + recruiter.email + ">");
         } catch (MessagingException e) {
-            System.out.println("❌ Failed to send email to: " + recruiter.name);
+            System.out.println("❌ Failed to send email to: " + recruiter.name + " <" + recruiter.email + ">");
             e.printStackTrace();
         }
     }
